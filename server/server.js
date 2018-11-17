@@ -1,7 +1,9 @@
-var {ObjectID} = require("mongodb");
-var express = require("express");
-var bodyParser = require("body-parser");
-var _ = require("lodash");
+const {ObjectID} = require("mongodb");
+const express = require("express");
+const bodyParser = require("body-parser");
+const _ = require("lodash");
+const bcrypt = require("bcryptjs");
+
 
 var {mongoose} = require("./db/mongoose.js");
 var {User} = require("./models/user");
@@ -100,6 +102,7 @@ app.patch("/todos/:id", (req,res) => {
 app.post("/users", (req, res) => {
 
   var body = _.pick(req.body,["email","password"]);
+
   var user = new User(body);
   user.save().then(() =>{
     return user.generateAuthToken();
@@ -112,7 +115,22 @@ app.post("/users", (req, res) => {
 });
 
 
+app.post("/users/login", (req,res) => {
 
+  var body = _.pick(req.body,["email","password"]);
+
+  User.findByCredentials(body.email, body.password).then ((user) => {
+
+    return user.generateAuthToken().then((token) => {
+      res.header("x-auth",token).send(user);
+    })
+
+  }). catch((e) => {
+    console.log(e);
+    res.status(401).send();
+  })
+
+})
 
 app.get("/users/me" , authenticate, (req,res) => {
   res.send(req.user);
