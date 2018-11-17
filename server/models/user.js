@@ -52,6 +52,19 @@ UserSchema.methods.generateAuthToken = function () {
   })
 }
 
+UserSchema.methods.removeToken = function (token) {
+  var user = this;
+  return user.update({
+    $pull: {
+      tokens: {
+          token: token
+      }
+    }
+  });
+
+
+}
+
 UserSchema.pre("save", function (next) {
   var user = this;
   if (user.isModified("password")) {
@@ -90,7 +103,6 @@ UserSchema.statics.findByToken = function (token) {
   var User = this;
   var decoded;
   try {
-    console.log(token);
     decoded = jwt.verify(token,"123abc");
   } catch(e) {
     return new Promise((resolve, reject) => {
