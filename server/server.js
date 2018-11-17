@@ -6,6 +6,7 @@ var _ = require("lodash");
 var {mongoose} = require("./db/mongoose.js");
 var {User} = require("./models/user");
 var {Todo} = require("./models/todo");
+var {authenticate} = require("./middleware/authenticate");
 
 const port = process.env.PORT || 3000;
 
@@ -101,7 +102,7 @@ app.post("/users", (req, res) => {
   var body = _.pick(req.body,["email","password"]);
   var user = new User(body);
   user.save().then(() =>{
-    user.generateAuthToken();
+    return user.generateAuthToken();
     //res.send(user);
   }, (e)=> {
     res.status(400).send(e);
@@ -111,6 +112,11 @@ app.post("/users", (req, res) => {
 });
 
 
+
+
+app.get("/users/me" , authenticate, (req,res) => {
+  res.send(req.user);
+});
 
 app.listen(port, () => {
   console.log(`started on port ${port}`);
